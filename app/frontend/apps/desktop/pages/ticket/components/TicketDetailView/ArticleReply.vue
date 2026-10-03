@@ -27,7 +27,7 @@ const props = defineProps<Props>()
 const currentTicket = toRef(props, 'ticket')
 const { isTicketCustomer } = useTicketView(currentTicket)
 
-const { noteArticleType, customerReplyArticleType } = useArticleReply(
+const { noteArticleType, customerReplyArticleType, chatArticleType } = useArticleReply(
   currentTicket,
   toRef(props, 'ticketArticleTypes'),
 )
@@ -50,6 +50,13 @@ const showCustomerReplyForm = () => {
     customerReplyArticleType.value.articleType,
     customerReplyArticleType.value.performReply,
   )
+}
+
+// Svitim pro tebe (fork): odpoved do zivého chatu na webu.
+const showChatReplyForm = () => {
+  if (!chatArticleType.value) return
+
+  emit('show-article-form', chatArticleType.value.articleType, chatArticleType.value.performReply)
 }
 
 const showNoteReplyForm = () => {
@@ -92,6 +99,16 @@ const showNoteReplyForm = () => {
 
       <template v-else-if="!isTicketCustomer && noteArticleType">
         <div class="flex flex-row items-center gap-3">
+          <CommonButton
+            v-if="chatArticleType"
+            variant="primary"
+            size="small"
+            data-test-id="ticket-detail-show-chat-reply-button"
+            :prefix-icon="chatArticleType.icon"
+            @click="showChatReplyForm"
+          >
+            {{ $t(chatArticleType.label) }}
+          </CommonButton>
           <CommonButton
             variant="tertiary"
             size="small"

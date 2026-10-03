@@ -47,9 +47,15 @@ export const useArticleReply = (
     availableArticleTypes.value.find((t) => t.articleType === 'web'),
   )
 
-  const defaultArticleType = computed(() =>
-    isTicketCustomer.value ? customerReplyArticleType.value : noteArticleType.value,
+  // Svitim pro tebe (fork): u ticketu z chatu je vychozi odpovedi „Odeslat do chatu“.
+  const chatArticleType = computed(() =>
+    availableArticleTypes.value.find((t) => t.articleType === 'chat'),
   )
 
-  return { noteArticleType, customerReplyArticleType, defaultArticleType }
+  const defaultArticleType = computed(() => {
+    if (isTicketCustomer.value) return customerReplyArticleType.value
+    return chatArticleType.value || noteArticleType.value
+  })
+
+  return { noteArticleType, customerReplyArticleType, chatArticleType, defaultArticleType }
 }

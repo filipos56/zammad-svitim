@@ -70,10 +70,10 @@ const handleShowArticleForm = () => {
   >
     <template v-if="defaultArticleType" #primary-action>
       <CommonButton
-        v-tooltip="isAgentUser ? $t('Add internal note') : $t('Add reply')"
+        v-tooltip="isAgentUser ? $t(defaultArticleType.label) : $t('Add reply')"
         size="medium"
-        :variant="isAgentUser ? 'tertiary' : 'primary'"
-        :icon="isAgentUser ? 'pencil-square' : 'web'"
+        :variant="isAgentUser && defaultArticleType.articleType !== 'chat' ? 'tertiary' : 'primary'"
+        :icon="isAgentUser && defaultArticleType.articleType !== 'chat' ? 'pencil-square' : defaultArticleType.icon"
         class="rounded-[(--toolbar-radius)-(--toolbar-p)]! border! border-neutral-100 text-gray-100 dark:border-gray-900 dark:text-neutral-400"
         @click="handleShowArticleForm"
       />
