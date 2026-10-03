@@ -87,3 +87,19 @@ Sestaví obraz `zammad-svitim:svitim-<commit>` (asi 16 min, s nižší prioritou
 Nextcloudu) a pustí ho na **zkušebním Zammadu** (`~/zammad-zkusebni`, `127.0.0.1:8081`,
 obnovený ze zálohy, pošta/chat/AI vypnuté). Na ostrý server až po otestování a Filipově OK.
 Prohlížení: ve VS Code (Remote SSH) záložka **Ports → Forward 8081** → http://localhost:8081
+
+## Překlady, které musí být v databázi (tabulka translations, locale cs)
+
+Nové texty z forku nejsou v `i18n/*.po` (ty se neupravují), takže se při nasazení na server
+musí doplnit do DB (`Translation#update!(target:)` — **nikdy `Translation.reset`**, smaže vlastní překlady):
+
+| zdroj | česky |
+|---|---|
+| `Discard draft` | Zahodit návrh |
+| `Send to chat` | Odeslat do chatu |
+| `or use the reply actions on articles.` | nebo použijte Odpověď u konkrétní zprávy. |
+
+## Automatický test v prohlížeči
+
+`~/zammad-skripty/ui-testy/fork-test.js` (Playwright v Dockeru, jen proti zkušebnímu Zammadu,
+testovací účet `ui-tester@zkusebni.local` existuje jen tam). Ověřuje body poradníku 7, 10, 11, 12, 13.
