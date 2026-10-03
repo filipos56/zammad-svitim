@@ -77,3 +77,13 @@ Zadání:
 ```
 
 Jedna úprava = jeden commit. Převzetí verze Zammadu = samostatný commit `upstream: …`.
+
+## Sestavení a nasazení na zkušební Zammad
+
+```
+~/bin/sestav-fork.sh
+```
+Sestaví obraz `zammad-svitim:svitim-<commit>` (asi 16 min, s nižší prioritou a hlídáním
+Nextcloudu) a pustí ho na **zkušebním Zammadu** (`~/zammad-zkusebni`, `127.0.0.1:8081`,
+obnovený ze zálohy, pošta/chat/AI vypnuté). Na ostrý server až po otestování a Filipově OK.
+Prohlížení: ve VS Code (Remote SSH) záložka **Ports → Forward 8081** → http://localhost:8081
