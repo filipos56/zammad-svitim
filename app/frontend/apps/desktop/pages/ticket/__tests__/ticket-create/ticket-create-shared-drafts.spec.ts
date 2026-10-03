@@ -375,7 +375,7 @@ describe('ticket create view - shared drafts sidebar', () => {
         }),
       )
 
-      await view.events.click(flyout.getByRole('button', { name: 'Delete' }))
+      await view.events.click(flyout.getByRole('button', { name: 'Discard draft' }))
 
       const dialog = within(await view.findByRole('dialog', { name: 'Delete object' }))
 

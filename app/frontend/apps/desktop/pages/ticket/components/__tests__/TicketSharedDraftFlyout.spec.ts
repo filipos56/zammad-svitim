@@ -129,7 +129,7 @@ describe('TicketSharedDraftFlyout.vue', () => {
 
     await wrapper.events.click(
       wrapper.getByRole('button', {
-        name: 'Delete',
+        name: 'Discard draft',
       }),
     )
 
