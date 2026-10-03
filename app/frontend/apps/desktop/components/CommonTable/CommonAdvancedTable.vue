@@ -447,6 +447,26 @@ const getLinkColorClasses = (item: TableAdvancedItem) => {
   }
 }
 
+// Svitim pro tebe (fork): barevne odliseni kanalu v prehledech ticketu. Kanal je vlastni
+// pole "kanal" (email / chat / phone / web) -- plni ho most chatu a triggery „Kanál ticketu: …“.
+// Svisly pruh vlevo + jemny podklad; pres box-shadow a background-image, aby se to nepralo
+// s prokladanim radku ani se zvyraznenim vybraneho radku (ty pouzivaji background-color).
+const channelRowClasses: Record<string, string> = {
+  chat: 'shadow-[inset_5px_0_0_#f59e0b] bg-[linear-gradient(90deg,rgba(245,158,11,0.22),rgba(245,158,11,0.07))]',
+  phone:
+    'shadow-[inset_5px_0_0_#22c55e] bg-[linear-gradient(90deg,rgba(34,197,94,0.20),rgba(34,197,94,0.06))]',
+}
+
+const getChannelRowClasses = (item: TableAdvancedItem) => {
+  if (props.object !== EnumObjectManagerObjects.Ticket) return ''
+
+  const kanal = (item as TicketById).objectAttributeValues?.find(
+    (value) => value.attribute?.name === 'kanal',
+  )?.value
+
+  return typeof kanal === 'string' ? channelRowClasses[kanal] || '' : ''
+}
+
 const selectAllLoadedItems = () => {
   const selectedItems = loadedItems.value.reduce((acc: ID[] = [], item) => {
     if (item.disabled || (item.policy && !item.policy.update)) return acc
@@ -556,6 +576,7 @@ watch(
         />
         <TableRow
           :item="item"
+          :class="getChannelRowClasses(item)"
           :is-row-selected="!hasBulkAction && item.id === selectedRowId"
           tabindex="-1"
           :has-checkbox="hasBulkAction"
