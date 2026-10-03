@@ -7,6 +7,7 @@ import { useEventListener } from '@vueuse/core'
 import { computed, onMounted, onUnmounted, ref, toRef, useTemplateRef, watch } from 'vue'
 
 import useValue from '#shared/components/Form/composables/useValue.ts'
+import { useAppName } from '#shared/composables/useAppName.ts'
 import { useAttachments } from '#shared/components/Form/fields/FieldEditor/composables/useAttachments.ts'
 import { useSignatureHandling } from '#shared/components/Form/fields/FieldEditor/composables/useSignatureHandling.ts'
 import { EXTENSION_NAME as userMentionExtensionName } from '#shared/components/Form/fields/FieldEditor/extensions/UserMention.ts'
@@ -35,6 +36,7 @@ import { useSessionStore } from '#shared/stores/session.ts'
 import { htmlCleanup } from '#shared/utils/htmlCleanup.ts'
 import testFlags from '#shared/utils/testFlags.ts'
 
+import SubmitOnEnter from './extensions/SubmitOnEnter.ts'
 import { TableKitExtensionName } from './extensions/TableKit.ts'
 import { useInlineMode } from './useInlineMode.ts'
 
@@ -83,6 +85,18 @@ if (isPlainText.value) {
 const { hasPermission } = useSessionStore()
 
 const customExtensions = getCustomExtensions(reactiveContext)
+
+// Svitim pro tebe (fork): Enter odesle odpoved jen u typu odpovedi, ktery si o to rekne
+// (meta.submitOnEnter -- typ "Chat") a jen na pocitaci; v mobilu zustava Enter novym radkem.
+customExtensions.push(
+  SubmitOnEnter.configure({
+    isActive: () =>
+      useAppName() === 'desktop' &&
+      !!props.context.meta?.submitOnEnter &&
+      !props.context.meta.submitOnEnter.disabled,
+    submit: () => props.context.node.at('$root')?.submit(),
+  }),
+)
 
 // Disable all custom extensions and tables for the basic set.
 if (props.context.extensionSet === 'basic') {

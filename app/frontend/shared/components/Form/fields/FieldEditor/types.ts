@@ -109,6 +109,10 @@ export interface FieldEditorProps {
    * "meta" represents an object, where the key is a plugin, and the value is an object with plugin-specific options
    */
   meta?: {
+    // Svitim pro tebe (fork): Enter odesle odpoved (typ odpovedi "Chat"), viz extensions/SubmitOnEnter.ts
+    submitOnEnter?: {
+      disabled?: boolean
+    }
     footer?: {
       disabled?: boolean
       text?: string
