@@ -53,6 +53,7 @@ import { QueryHandler } from '#shared/server/apollo/handler/index.ts'
 import { GraphQLErrorTypes, type GraphQLHandlerError } from '#shared/types/error.ts'
 
 import { useFlyout } from '#desktop/components/CommonFlyout/useFlyout.ts'
+import { useSvitimMarkTicketSeen } from '#desktop/entities/ticket/svitim/seen.ts'
 import CommonIndicator from '#desktop/components/CommonIndicator/CommonIndicator.vue'
 import { useIndicator } from '#desktop/components/CommonIndicator/useIndicator.ts'
 import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
@@ -94,6 +95,9 @@ const isReplyPinned = useLocalStorage('article-reply-pinned', false)
 const contentContainerElement = useTemplateRef('content-container')
 
 const { ticket, ticketId, ...ticketInformation } = initializeTicketInformation(internalId)
+
+// Svitim pro tebe (fork): zapsat, ze operator ticket videl (neprectene v prehledech, bod 13).
+useSvitimMarkTicketSeen(ticket)
 
 const { isIntersecting: isReachingBottom } = useIndicator()
 const { isIntersecting: isReachingTop } = useIndicator()

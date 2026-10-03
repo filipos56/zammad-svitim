@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { useInfiniteScroll, useResizeObserver, whenever } from '@vueuse/core'
 import { isEqual, merge } from 'lodash-es'
-import { computed, nextTick, ref, shallowRef, toRef, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, shallowRef, toRef, useTemplateRef, watch, type Ref } from 'vue'
 import { onBeforeRouteUpdate } from 'vue-router'
 
 import ObjectAttribute from '#shared/components/ObjectAttributes/ObjectAttribute.vue'
@@ -20,6 +20,7 @@ import CellCheckbox from '#desktop/components/CommonTable/CellContent/CellCheckb
 import CommonTableSkeleton from '#desktop/components/CommonTable/Skeleton/CommonTableSkeleton.vue'
 import TableCaption from '#desktop/components/CommonTable/TableCaption.vue'
 import { useKeepAliveHooks } from '#desktop/composables/useKeepAliveHooks.ts'
+import { useSvitimTicketsSeen } from '#desktop/entities/ticket/svitim/seen.ts'
 
 import TableHeader from './TableHeader.vue'
 import TableRow from './TableRow.vue'
@@ -467,6 +468,16 @@ const getChannelRowClasses = (item: TableAdvancedItem) => {
   return typeof kanal === 'string' ? channelRowClasses[kanal] || '' : ''
 }
 
+// Svitim pro tebe (fork): neprectene tickety tucne (poradnik bod 13).
+const { isUnread } = useSvitimTicketsSeen(
+  loadedItems as unknown as Ref<{ internalId?: number; lastContactCustomerAt?: string | null }[]>,
+  () => props.object === EnumObjectManagerObjects.Ticket,
+)
+
+const isUnreadTicket = (item: TableAdvancedItem) =>
+  props.object === EnumObjectManagerObjects.Ticket &&
+  isUnread(item as unknown as { internalId?: number; lastContactCustomerAt?: string | null })
+
 const selectAllLoadedItems = () => {
   const selectedItems = loadedItems.value.reduce((acc: ID[] = [], item) => {
     if (item.disabled || (item.policy && !item.policy.update)) return acc
@@ -576,7 +587,7 @@ watch(
         />
         <TableRow
           :item="item"
-          :class="getChannelRowClasses(item)"
+          :class="[getChannelRowClasses(item), { '**:font-bold': isUnreadTicket(item) }]"
           :is-row-selected="!hasBulkAction && item.id === selectedRowId"
           tabindex="-1"
           :has-checkbox="hasBulkAction"
