@@ -131,6 +131,7 @@ const {
   isDirty,
   isInitialSettled,
   formReset,
+  formGroupReset,
   formSubmit,
   triggerFormUpdater,
 } = useForm()
@@ -680,9 +681,16 @@ const keepChatReplyOpen = () => {
       ] as const,
     ([present, createType, editable, agent]) => {
       if (present || createType !== 'chat' || !editable || !agent) return
-      nextTick(() => {
+      nextTick(async () => {
         if (newTicketArticlePresent.value) return
-        openReplyForm({ articleType: 'chat' })
+        await openReplyForm({ articleType: 'chat' })
+        await nextTick()
+
+        // Prazdne samo otevrene pole neni „neulozena zmena“ -- jinak by svitilo
+        // „Zrušit neuložené změny“, zalozka mela cervenou tecku a pri odchodu by se ptala.
+        // Vychozim stavem skupiny clanku se stane tahle prazdna odpoved do chatu.
+        const group = articleFormGroupNode.value
+        if (group) formGroupReset(group, { ...(group.value as object) }, { resetFlags: false })
       })
     },
     { immediate: true },
