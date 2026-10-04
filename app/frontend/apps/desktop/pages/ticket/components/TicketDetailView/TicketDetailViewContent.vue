@@ -643,6 +643,8 @@ const discardReplyForm = async () => {
 }
 
 const onEditFormSettled = () => {
+  keepChatReplyOpen()
+
   watch(
     () => flags.value.newArticlePresent,
     (newValue, oldValue) => {
@@ -659,6 +661,29 @@ const onEditFormSettled = () => {
           articleFormGroupNode.value?.reset()
         })
       }
+    },
+    { immediate: true },
+  )
+}
+
+// Svitim pro tebe (fork): u chatoveho ticketu je pole pro odpoved do chatu porad otevrene --
+// operator pise a odesle zlutym tlacitkem „Odeslat / uložit“ nebo Enterem, jako v chatu.
+// Po odeslani se formular vycisti a pole se hned otevre znovu.
+const keepChatReplyOpen = () => {
+  watch(
+    () =>
+      [
+        newTicketArticlePresent.value,
+        ticket.value?.createArticleType?.name,
+        isTicketEditable.value,
+        isTicketAgent.value,
+      ] as const,
+    ([present, createType, editable, agent]) => {
+      if (present || createType !== 'chat' || !editable || !agent) return
+      nextTick(() => {
+        if (newTicketArticlePresent.value) return
+        openReplyForm({ articleType: 'chat' })
+      })
     },
     { immediate: true },
   )
