@@ -670,6 +670,29 @@ const onEditFormSettled = () => {
 // Svitim pro tebe (fork): u chatoveho ticketu je pole pro odpoved do chatu porad otevrene --
 // operator pise a odesle zlutym tlacitkem „Odeslat / uložit“ nebo Enterem, jako v chatu.
 // Po odeslani se formular vycisti a pole se hned otevre znovu.
+//
+// Prazdne pole neni „neulozena zmena“ -- jinak by svitilo „Zrušit neuložené změny“, zalozka
+// mela cervenou tecku a pri odchodu by se Zammad ptal. Proto se prazdna odpoved do chatu
+// nastavi jako vychozi stav skupiny clanku. Jen kdyz je OPRAVDU prazdna (zadny text ani
+// priloha), aby se nikdy nesmazalo, co operator mezitim napsal; plati i pro pole obnovene
+// z ulozene zalozky.
+const chatReplyPristineIfEmpty = () => {
+  const group = articleFormGroupNode.value
+  if (!group) return
+
+  const value = (group.value || {}) as {
+    articleType?: string
+    body?: string
+    attachments?: unknown[]
+  }
+  if (value.articleType !== 'chat') return
+  if ((value.body || '').replace(/<[^>]*>/g, '').trim() !== '') return
+  if (value.attachments?.length) return
+  if (!group.context?.state.dirty) return
+
+  formGroupReset(group, { ...value }, { resetFlags: false })
+}
+
 const keepChatReplyOpen = () => {
   watch(
     () =>
@@ -679,18 +702,14 @@ const keepChatReplyOpen = () => {
         isTicketEditable.value,
         isTicketAgent.value,
       ] as const,
-    ([present, createType, editable, agent]) => {
-      if (present || createType !== 'chat' || !editable || !agent) return
+    ([, createType, editable, agent]) => {
+      if (createType !== 'chat' || !editable || !agent) return
       nextTick(async () => {
-        if (newTicketArticlePresent.value) return
-        await openReplyForm({ articleType: 'chat' })
-        await nextTick()
-
-        // Prazdne samo otevrene pole neni „neulozena zmena“ -- jinak by svitilo
-        // „Zrušit neuložené změny“, zalozka mela cervenou tecku a pri odchodu by se ptala.
-        // Vychozim stavem skupiny clanku se stane tahle prazdna odpoved do chatu.
-        const group = articleFormGroupNode.value
-        if (group) formGroupReset(group, { ...(group.value as object) }, { resetFlags: false })
+        if (!newTicketArticlePresent.value) {
+          await openReplyForm({ articleType: 'chat' })
+          await nextTick()
+        }
+        chatReplyPristineIfEmpty()
       })
     },
     { immediate: true },
