@@ -448,14 +448,14 @@ const getLinkColorClasses = (item: TableAdvancedItem) => {
   }
 }
 
-// Svitim pro tebe (fork): barevne odliseni kanalu v prehledech ticketu. Kanal je vlastni
-// pole "kanal" (email / chat / phone / web) -- plni ho most chatu a triggery „Kanál ticketu: …“.
-// Svisly pruh vlevo + jemny podklad; pres box-shadow a background-image, aby se to nepralo
+// Svitim pro tebe (fork): nenapadne odliseni kanalu v prehledech ticketu -- jen tenky svisly
+// pruh vlevo (chat modre, telefon zelene, e-mail bez pruhu). Kanal je vlastni pole "kanal",
+// plni ho most chatu a triggery „Kanál ticketu: …“. Pres box-shadow, aby se to nepralo
 // s prokladanim radku ani se zvyraznenim vybraneho radku (ty pouzivaji background-color).
+// Jemne oranzovy podklad je vyhrazeny pro NEPRECTENE tickety (Filip 4. 10. 2026).
 const channelRowClasses: Record<string, string> = {
-  chat: 'shadow-[inset_5px_0_0_#f59e0b] bg-[linear-gradient(90deg,rgba(245,158,11,0.22),rgba(245,158,11,0.07))]',
-  phone:
-    'shadow-[inset_5px_0_0_#22c55e] bg-[linear-gradient(90deg,rgba(34,197,94,0.20),rgba(34,197,94,0.06))]',
+  chat: 'shadow-[inset_3px_0_0_#38bdf8]',
+  phone: 'shadow-[inset_3px_0_0_#22c55e]',
 }
 
 const getChannelRowClasses = (item: TableAdvancedItem) => {
@@ -587,7 +587,13 @@ watch(
         />
         <TableRow
           :item="item"
-          :class="[getChannelRowClasses(item), { '**:font-bold': isUnreadTicket(item) }]"
+          :class="[
+            getChannelRowClasses(item),
+            {
+              '**:font-bold bg-[linear-gradient(90deg,rgba(245,158,11,0.20),rgba(245,158,11,0.08))]':
+                isUnreadTicket(item),
+            },
+          ]"
           :is-row-selected="!hasBulkAction && item.id === selectedRowId"
           tabindex="-1"
           :has-checkbox="hasBulkAction"
