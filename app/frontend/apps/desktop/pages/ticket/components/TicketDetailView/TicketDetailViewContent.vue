@@ -680,13 +680,7 @@ const onEditFormSettled = () => {
 // nastavi jako vychozi stav skupiny clanku. Jen kdyz je OPRAVDU prazdna (zadny text ani
 // priloha), aby se nikdy nesmazalo, co operator mezitim napsal; plati i pro pole obnovene
 // z ulozene zalozky.
-// Jen jednou na kazde otevreni pole (jinak reset -> prepnuti pole -> dalsi reset = smycka,
-// editor se porad prekresloval a neslo do nej kliknout; test 19. 10. 2026).
-let chatPristineHotovo = false
-
-const chatReplyPristineIfEmpty = async () => {
-  if (chatPristineHotovo) return
-  await form.value?.formNode?.settled
+const chatReplyPristineIfEmpty = () => {
   const group = articleFormGroupNode.value
   if (!group) return
 
@@ -698,8 +692,8 @@ const chatReplyPristineIfEmpty = async () => {
   if (value.articleType !== 'chat') return
   if ((value.body || '').replace(/<[^>]*>/g, '').trim() !== '') return
   if (value.attachments?.length) return
+  if (!group.context?.state.dirty) return
 
-  chatPristineHotovo = true
   formGroupReset(group, { ...value }, { resetFlags: false })
 }
 
@@ -712,8 +706,7 @@ const keepChatReplyOpen = () => {
         isTicketEditable.value,
         isTicketAgent.value,
       ] as const,
-    ([present, createType, editable, agent]) => {
-      if (!present) chatPristineHotovo = false
+    ([, createType, editable, agent]) => {
       if (createType !== 'chat' || !editable || !agent) return
       nextTick(async () => {
         if (!newTicketArticlePresent.value) {
