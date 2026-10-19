@@ -585,6 +585,8 @@ const submitEditTicket = async (formData: FormSubmitData<TicketUpdateFormData>) 
 
         return {
           reset: (values: FormSubmitData<TicketUpdateFormData>, formNodeValues: FormValues) => {
+            svitimPosledniReset = Date.now()
+            svitimZapamatujZaklad()
             nextTick(() => {
               if (!formNodeValues || !ticket.value) return
 
@@ -646,6 +648,7 @@ const discardReplyForm = async () => {
 
 const onEditFormSettled = () => {
   keepChatReplyOpen()
+  svitimZapamatujZaklad()
 
   watch(
     () => flags.value.newArticlePresent,
@@ -677,7 +680,13 @@ const onEditFormSettled = () => {
 // nastavi jako vychozi stav skupiny clanku. Jen kdyz je OPRAVDU prazdna (zadny text ani
 // priloha), aby se nikdy nesmazalo, co operator mezitim napsal; plati i pro pole obnovene
 // z ulozene zalozky.
-const chatReplyPristineIfEmpty = () => {
+// Jen jednou na kazde otevreni pole (jinak reset -> prepnuti pole -> dalsi reset = smycka,
+// editor se porad prekresloval a neslo do nej kliknout; test 19. 10. 2026).
+let chatPristineHotovo = false
+
+const chatReplyPristineIfEmpty = async () => {
+  if (chatPristineHotovo) return
+  await form.value?.formNode?.settled
   const group = articleFormGroupNode.value
   if (!group) return
 
@@ -689,8 +698,8 @@ const chatReplyPristineIfEmpty = () => {
   if (value.articleType !== 'chat') return
   if ((value.body || '').replace(/<[^>]*>/g, '').trim() !== '') return
   if (value.attachments?.length) return
-  if (!group.context?.state.dirty) return
 
+  chatPristineHotovo = true
   formGroupReset(group, { ...value }, { resetFlags: false })
 }
 
@@ -703,7 +712,8 @@ const keepChatReplyOpen = () => {
         isTicketEditable.value,
         isTicketAgent.value,
       ] as const,
-    ([, createType, editable, agent]) => {
+    ([present, createType, editable, agent]) => {
+      if (!present) chatPristineHotovo = false
       if (createType !== 'chat' || !editable || !agent) return
       nextTick(async () => {
         if (!newTicketArticlePresent.value) {
@@ -749,15 +759,31 @@ const svitimUzavritTicket = async () => {
 }
 
 let svitimUkladam = false
+let svitimPosledniReset = 0
+// Otisk poli ticketu (bez rozepsane odpovedi) zapamatovany chvili po nacteni / po ulozeni --
+// autosave se spusti jen kdyz se od nej neco zmenilo, tedy po zmene od operatora.
+let svitimZaklad = ''
+const SVITIM_MIMO = new Set(['article', 'shared_draft_id', 'isDefaultFollowUpStateSet'])
+const svitimOtisk = () =>
+  JSON.stringify(
+    Object.entries((values.value || {}) as Record<string, unknown>)
+      .filter(([pole]) => !SVITIM_MIMO.has(pole))
+      .sort(([a], [b]) => a.localeCompare(b)),
+  )
+const svitimZapamatujZaklad = () => {
+  setTimeout(() => {
+    svitimZaklad = svitimOtisk()
+  }, 1500)
+}
 const svitimUlozPanel = useDebounceFn(async () => {
   const node = form.value?.formNode
   if (!node || !ticket.value || isDisabled.value || svitimUkladam) return
 
-  // Ulozit jen kdyz se zmenilo neco mimo odpoved (skupina „article“ se ukada odeslanim).
-  const zmenenoMimoOdpoved = node.children.some(
-    (child) => child.name !== 'article' && !!child.context?.state.dirty,
-  )
-  if (!zmenenoMimoOdpoved) return
+  // Ulozit jen kdyz operator zmenil nejake pole ticketu oproti tomu, co je ulozene na serveru
+  // (porovnani s hodnotami ticketu, ne „dirty“ stav formulare -- ten se po odeslani odpovedi
+  // a zmene stavu new->open serverem prepina a autosave se pak spoustel sam; test 19. 10.).
+  if (Date.now() - svitimPosledniReset < 2500 || !svitimZaklad) return
+  if (svitimOtisk() === svitimZaklad) return
 
   const data = cloneDeep(values.value) as FormSubmitData<TicketUpdateFormData>
   const rozepsanaOdpoved = (data as Record<string, unknown>).article
@@ -770,6 +796,8 @@ const svitimUlozPanel = useDebounceFn(async () => {
     const result = await editTicket(data, { skipValidators: [] })
     if (result?.ticketUpdate?.ticket) {
       notify({ id: 'svitim-autosave', type: NotificationTypes.Success, message: __('Saved.') })
+      svitimPosledniReset = Date.now()
+      svitimZapamatujZaklad()
       await nextTick()
       formReset(
         {
