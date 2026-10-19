@@ -115,6 +115,8 @@ const actions = computed(() => {
     popoverActions,
   }
 })
+// Svitim pro tebe (fork): akce, které jsou „hlavní odpověď“ zákazníkovi.
+const SVITIM_HLAVNI_ODPOVED = ['email-reply', 'chat', 'sms']
 </script>
 
 <template>
@@ -130,9 +132,15 @@ const actions = computed(() => {
       class="order-1 flex items-center"
       :class="position === 'right' ? 'order-first' : 'order-last'"
     >
+      <!-- Svitim pro tebe (fork): „Odpověď“ je nejpoužívanější tlačítko -> větší a výrazné
+           (oranžová Oranžovky). Filip 19. 10. 2026. Ostatní akce beze změny. -->
       <CommonButton
-        class="px-1 py-0.5! text-xs! focus-visible:outline-offset-0! focus-visible:outline-blue-800!"
-        :class="buttonVariantClassExtension"
+        class="focus-visible:outline-offset-0! focus-visible:outline-blue-800!"
+        :class="
+          SVITIM_HLAVNI_ODPOVED.includes(action.key)
+            ? 'bg-[#f59e0b]! px-3! py-1.5! text-sm! font-semibold text-black! hover:bg-[#d97706]!'
+            : ['px-1 py-0.5! text-xs!', buttonVariantClassExtension]
+        "
         :prefix-icon="action.icon"
         size="large"
         @click="action.onClick"
