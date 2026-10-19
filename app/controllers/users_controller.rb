@@ -287,8 +287,6 @@ curl http://localhost/api/v1/users/email_verify -v -u #{login}:#{password} -H "C
 
     user = Service::User::SignupVerify.with_current_user(false).execute(token: params[:token])
 
-    current_user_set(user) if user
-
     msg = user ? { message: 'ok', user_email: user.email } : { message: 'failed' }
 
     render json: msg, status: :ok
@@ -577,7 +575,7 @@ curl http://localhost/api/v1/users/preferences_reset -v -u #{login}:#{password} 
 =end
 
   def preferences_notifications_reset
-    User.reset_notifications_preferences!(current_user)
+    User.reset_personal_notifications_preferences!(current_user)
 
     render json: { message: 'ok' }, status: :ok
   end

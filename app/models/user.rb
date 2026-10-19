@@ -24,6 +24,7 @@ class User < ApplicationModel
   include User::HasAuditLogs
   include User::Search
   include User::SearchIndex
+  include User::TerminatesSessions
   include User::TouchesOrganization
   include User::TriggersSubscriptions
   include User::PerformsGeoLookup
@@ -164,20 +165,7 @@ returns
     # Email sending: always first name last name (regardless of setting)
     format = recipient_line ? 'first_last' : Setting.get('user_name_format')
 
-    parts, separator = case format
-                       when 'last_first'
-                         [[lastname, firstname], ' ']
-                       when 'last_first_comma'
-                         [[lastname, firstname], ', ']
-                       else
-                         [[firstname, lastname], ' ']
-                       end
-
-    name = parts
-      .map { |part| part.to_s.strip }
-      .compact_blank
-      .join(separator)
-      .strip
+    name = display_name_from_parts(format)
 
     if name.blank? && email.present? && email_fallback
       return email
@@ -198,6 +186,37 @@ returns
     end
 
     name
+  end
+
+=begin
+
+display name of user, built only from the name parts following the given
+format - without any fallback to personal data like email or phone. The
+server side twin of the frontend's displayNameFromParts().
+
+  user = User.find(123)
+  result = user.display_name_from_parts
+
+returns
+
+  result = "Bob Smith"
+
+=end
+
+  def display_name_from_parts(format = Setting.get('user_name_format'))
+    parts, separator = case format
+                       when 'last_first'
+                         [[lastname, firstname], ' ']
+                       when 'last_first_comma'
+                         [[lastname, firstname], ', ']
+                       else
+                         [[firstname, lastname], ' ']
+                       end
+
+    parts
+      .map { |part| part.to_s.strip }
+      .compact_blank
+      .join(separator)
   end
 
 =begin
@@ -654,6 +673,19 @@ returns
     user.fill_notification_config_preferences
 
     user.save!
+  end
+
+  # .reset_notifications_preferences! is also used to apply the admin defaults to all agents.
+  # This one also removes the group limit and sound settings, so the frontends use their defaults.
+  #
+  # @option user [User] to reset preferences
+  def self.reset_personal_notifications_preferences!(user)
+    return if !user.permissions? 'ticket.agent'
+
+    user.preferences[:notification_config]&.delete(:group_ids)
+    user.preferences.delete(:notification_sound)
+
+    reset_notifications_preferences!(user)
   end
 
 =begin

@@ -233,9 +233,10 @@ RSpec.describe 'Ticket Summary', authenticated_as: :authenticate, type: :system 
       end
 
       it 'shows the sidebar once the ticket starts matching, without a page refresh' do
-        expect(page).to have_no_css('.tabsSidebar-tab[data-tab=summary]')
+        expect(page).to have_text(ticket.title)
+          .and have_no_css('.tabsSidebar-tab[data-tab=summary]')
 
-        ensure_websocket
+        wait_for_authenticated_session(user: agent)
 
         ticket.update!(priority: Ticket::Priority.find_by(name: '3 high'))
 
@@ -265,7 +266,7 @@ RSpec.describe 'Ticket Summary', authenticated_as: :authenticate, type: :system 
       it 'hides the sidebar once the ticket stops matching, without a page refresh' do
         expect(page).to have_css('.tabsSidebar-tab[data-tab=summary]')
 
-        ensure_websocket
+        wait_for_authenticated_session(user: agent)
 
         ticket.update!(priority: Ticket::Priority.find_by(name: '2 normal'))
 
@@ -279,7 +280,7 @@ RSpec.describe 'Ticket Summary', authenticated_as: :authenticate, type: :system 
 
         expect(page).to have_css('.tabsSidebar-tab[data-tab=summary].active')
 
-        ensure_websocket
+        wait_for_authenticated_session(user: agent)
 
         ticket.update!(priority: Ticket::Priority.find_by(name: '2 normal'))
 
@@ -526,6 +527,28 @@ RSpec.describe 'Ticket Summary', authenticated_as: :authenticate, type: :system 
             .and have_no_text('You have already provided feedback, thank you.')
         end
 
+      end
+
+      context 'when user provides feedback meanwhile in another view' do
+        before do
+          # Waits for the buttons, so the update below happens after the page has loaded the usage.
+          find('.sidebar[data-tab="summary"] .js-aiFeedbackButtons')
+
+          ai_analytics_usage.update!(rating: true)
+        end
+
+        it 'shows the feedback as given instead of the comment field' do
+          within '.sidebar[data-tab="summary"]' do
+            click '.js-aiNegativeReaction'
+
+            expect(page).to have_text('Thank you for your feedback.')
+              .and have_no_field('comment')
+              .and have_no_css('.js-aiFeedbackButtons')
+              .and have_css('.js-aiFeedbackAlert.hide', visible: :all)
+          end
+
+          expect(ai_analytics_usage.reload).to have_attributes(rating: true)
+        end
       end
 
       context 'when user has already provided feedback' do

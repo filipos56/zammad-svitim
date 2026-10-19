@@ -150,6 +150,43 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
           expect(page).to have_css('.batch-overlay-circle--top.js-batch-macro-circle')
             .and(have_css('.batch-overlay-circle--bottom.js-batch-assign-circle'))
         end
+
+        context 'with priority icons enabled' do
+          let(:before_authenticate) { Setting.set('ui_ticket_priority_icons', true) }
+
+          it 'shows the ticket number in the dragged row' do
+            within(:active_content, '.main .table') do
+              element = page.find(:table_row, ticket_1.id).native
+              click_and_hold(element)
+              move_mouse_by(0, 5)
+              move_mouse_by(0, 7)
+            end
+
+            expect(page).to have_css('.batch-dragger', text: ticket_1.number)
+          ensure
+            release_mouse
+          end
+        end
+      end
+
+      context 'when a row on a non-ticket tab is dragged' do
+        let(:customer)            { create(:customer, firstname: 'Testing') }
+        let(:before_authenticate) { customer }
+
+        it 'does not show the batch actions' do
+          find('[data-tab-content=User]').click
+
+          within(:active_content, '.main .table') do
+            element = page.find(:table_row, customer.id).native
+            click_and_hold(element)
+            move_mouse_by(0, 5)
+            move_mouse_by(0, 7)
+          end
+
+          expect(page).to have_no_css('.batch-dragger', visible: :all)
+        ensure
+          release_mouse
+        end
       end
     end
   end
@@ -478,18 +515,27 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
       end
 
       it 'does switch search results properly' do
-        # clear: :backspace paces the clear+type sequence more naturally - the default
-        #   clear strategy has occasionally dropped the first typed character here.
-        page.find('.js-search').fill_in(with: '"Testing Ticket 1"', fill_options: { clear: :backspace })
-        expect(page.find('.js-tableBody')).to have_text('Testing Ticket 1')
-        expect(page.find('.js-tableBody')).to have_no_text('Testing Ticket 2')
+        page.find('.js-search').fill_in(with: '"Testing Ticket 1"')
+        expect(page).to have_css('.js-tableBody', text: 'Testing Ticket 1')
+        expect(page).to have_no_css('.js-tableBody', text: 'Testing Ticket 2')
         expect(current_url).to include('Testing%20Ticket%201')
 
         # switch by global search
-        page.find('.js-search').fill_in(with: '"Testing Ticket 2"', fill_options: { clear: :backspace })
-        expect(page.find('.js-tableBody')).to have_text('Testing Ticket 2')
-        expect(page.find('.js-tableBody')).to have_no_text('Testing Ticket 1')
+        page.find('.js-search').fill_in(with: '"Testing Ticket 2"')
+        expect(page).to have_css('.js-tableBody', text: 'Testing Ticket 2')
+        expect(page).to have_no_css('.js-tableBody', text: 'Testing Ticket 1')
         expect(current_url).to include('Testing%20Ticket%202')
+      end
+
+      it 'keeps input typed before the route of the previous key is executed' do
+        page.execute_script(<<~JS)
+          $('.js-search').val('Testing Ticket').trigger('keyup')
+          $('.js-search').val('Testing Ticket 2')
+        JS
+
+        # The results of the first key are rendered only after the route has been executed.
+        expect(page).to have_css('.js-tableBody', text: 'Testing Ticket 1')
+        expect(page).to have_field(class: 'js-search', with: 'Testing Ticket 2')
       end
     end
 
@@ -500,15 +546,15 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
       end
 
       it 'does switch search results properly' do
-        expect(page.find('.js-tableBody')).to have_text('Testing Ticket 1')
-        expect(page.find('.js-tableBody')).to have_no_text('Testing Ticket 2')
+        expect(page).to have_css('.js-tableBody', text: 'Testing Ticket 1')
+        expect(page).to have_no_css('.js-tableBody', text: 'Testing Ticket 2')
         expect(current_url).to include('Testing%20Ticket%201')
 
         # switch by global search
         fill_in id: 'global-search', with: '"Testing Ticket 2"'
         click_on 'Show Search Details'
-        expect(page.find('.js-tableBody')).to have_text('Testing Ticket 2')
-        expect(page.find('.js-tableBody')).to have_no_text('Testing Ticket 1')
+        expect(page).to have_css('.js-tableBody', text: 'Testing Ticket 2')
+        expect(page).to have_no_css('.js-tableBody', text: 'Testing Ticket 1')
         expect(current_url).to include('Testing%20Ticket%202')
       end
     end
@@ -519,14 +565,14 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
       end
 
       it 'does switch search results properly' do
-        expect(page.find('.js-tableBody')).to have_text('Testing Ticket 1')
-        expect(page.find('.js-tableBody')).to have_no_text('Testing Ticket 2')
+        expect(page).to have_css('.js-tableBody', text: 'Testing Ticket 1')
+        expect(page).to have_no_css('.js-tableBody', text: 'Testing Ticket 2')
         expect(current_url).to include('Testing%20Ticket%201')
 
         # switch by url
         visit '#search/"Testing Ticket 2"'
-        expect(page.find('.js-tableBody')).to have_text('Testing Ticket 2')
-        expect(page.find('.js-tableBody')).to have_no_text('Testing Ticket 1')
+        expect(page).to have_css('.js-tableBody', text: 'Testing Ticket 2')
+        expect(page).to have_no_css('.js-tableBody', text: 'Testing Ticket 1')
         expect(current_url).to include('Testing%20Ticket%202')
       end
     end

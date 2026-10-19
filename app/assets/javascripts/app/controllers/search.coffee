@@ -96,8 +96,12 @@ class App.Search extends App.Controller
 
     @navupdate(url: '#search', type: 'menu')
 
+    ownNavigation = params.query? and params.query is @navigatedQuery
+    @navigatedQuery = undefined
+
     if !_.isEmpty(params.query) # When opening detailed search from the global search
-      @$('.js-search').val(params.query).trigger('keyup')
+      # The route runs on the asynchronous hashchange, so keys typed in the meantime would be overwritten.
+      @$('.js-search').val(params.query).trigger('keyup') if !ownNavigation
     else if @query # When coming back to detailed search taskbar from another taskbar
       @reloadCurrentSearch()
 
@@ -162,6 +166,7 @@ class App.Search extends App.Controller
         parent:   @
         parentEl: elLocal
         appEl:    @appEl
+        dragEnabled: => @model is 'Ticket'
         batchSuccess: =>
           @search(0, true)
       )
@@ -179,7 +184,7 @@ class App.Search extends App.Controller
       return
 
     # on other keys, show result
-    @navigate "#search/#{encodeURIComponent(@searchInput.val())}"
+    @navigateToQuery()
     @savedOrderBy = {}
     @search(0)
 
@@ -510,8 +515,13 @@ class App.Search extends App.Controller
     @updateFilledClass()
     @resultPaginated = {}
     @savedOrderBy = {}
-    @navigate "#search/#{encodeURIComponent(@searchInput.val())}"
+    @navigateToQuery()
     @search(0)
+
+  navigateToQuery: =>
+    url = "#search/#{encodeURIComponent(@searchInput.val())}"
+    @navigatedQuery = @searchInput.val() if url isnt window.location.hash
+    @navigate url
 
   updateFilledClass: ->
     @searchInput.toggleClass 'is-empty', !@searchInput.val()
