@@ -6,17 +6,21 @@
 // rozkliknuti, reklamace. Data pripravuje ~/bin/pohoda-do-ticketu.py na serveru (zrcadlo
 // Pohody), Zammad je cte z preferences zakaznika (dotaz ticketSvitimPohoda). Filip 19. 10. 2026.
 import gql from 'graphql-tag'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { getApolloClient } from '#shared/server/apollo/client.ts'
 
 import { useTicketInformation } from '#desktop/pages/ticket/composables/useTicketInformation.ts'
-import type { TicketSidebarProps } from '#desktop/pages/ticket/types/sidebar.ts'
+import type { TicketSidebarEmits, TicketSidebarProps } from '#desktop/pages/ticket/types/sidebar.ts'
 
 import TicketSidebarContent from '../TicketSidebarContent.vue'
 import TicketSidebarWrapper from '../TicketSidebarWrapper.vue'
 
 defineProps<TicketSidebarProps>()
+const emit = defineEmits<TicketSidebarEmits>()
+
+// Panel se v liste vpravo zobrazi, az kdyz se sam „ohlasi“ (stejne jako checklist).
+onMounted(() => emit('show'))
 
 interface Polozka {
   nazev: string
