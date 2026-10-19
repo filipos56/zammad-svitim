@@ -17,6 +17,7 @@ import QueryHandler from '#shared/server/apollo/handler/QueryHandler.ts'
 import SubscriptionHandler from '#shared/server/apollo/handler/SubscriptionHandler.ts'
 
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
+import SvitimSearchHelp from '#desktop/components/svitim/SvitimSearchHelp.vue'
 import CommonSectionCollapse from '#desktop/components/CommonSectionCollapse/CommonSectionCollapse.vue'
 import QuickSearchResultList from '#desktop/components/Search/QuickSearch/QuickSearchResultList/QuickSearchResultList.vue'
 import { useUserCurrentRecentCloseResetMutation } from '#desktop/entities/user/current/graphql/mutations/userCurrentRecentCloseReset.api.ts'
@@ -140,6 +141,9 @@ const { resetQuickSearchInputField } = useQuickSearchInput()
 
 <template>
   <div class="overflow-x-hidden overflow-y-auto px-3 py-2.5 outline-none">
+    <!-- Svitim pro tebe (fork): nápověda ke zkratkám hledání (poradník bod 14) -->
+    <SvitimSearchHelp v-if="!(debouncedSearchInput && hasSearchInput) && !collapsed" />
+
     <QuickSearchResultList
       v-if="debouncedSearchInput && hasSearchInput"
       :search="search"
