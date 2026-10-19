@@ -33,6 +33,7 @@ const { noteArticleType, customerReplyArticleType } = useArticleReply(
 )
 
 const emit = defineEmits<{
+  'submit-reply': []
   'show-article-form': [
     articleType: string,
     performReply: AppSpecificTicketArticleType['performReply'],
@@ -75,6 +76,7 @@ const showNoteReplyForm = () => {
       :has-internal-article="hasInternalArticle"
       :is-ticket-customer="isTicketCustomer"
       @discard-form="$emit('discard-form')"
+      @submit-reply="$emit('submit-reply')"
       @toggle-pin="pinned = !pinned"
     />
   </div>

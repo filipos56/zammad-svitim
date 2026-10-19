@@ -21,6 +21,7 @@ interface Props {
 const props = defineProps<Props>()
 
 defineEmits<{
+  'submit-reply': []
   'discard-form': []
   'toggle-pin': []
 }>()
@@ -149,6 +150,18 @@ onMounted(() => {
               />
             </div>
             <div id="ticketArticleReplyForm" class="h-full grow" />
+            <!-- Svitim pro tebe (fork): odpoved se odesila tady; zlute tlacitko dole jen uzavira
+                 ticket (Filip 19. 10. 2026). -->
+            <div v-if="!isTicketCustomer" class="mt-3 flex justify-end">
+              <CommonButton
+                size="large"
+                variant="submit"
+                data-test-id="svitim-send-reply"
+                @click="$emit('submit-reply')"
+              >
+                {{ $t('Send') }}
+              </CommonButton>
+            </div>
           </div>
         </div>
       </div>

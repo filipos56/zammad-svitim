@@ -25,6 +25,8 @@ export interface Props {
   canUseDraft?: boolean
   sharedDraftId?: string | null
   liveUserList: TicketLiveAppUser[]
+  // Svitim pro tebe (fork): viz TicketAgentUpdateButton.
+  closeBlocked?: boolean
 }
 
 defineProps<Props>()
@@ -68,6 +70,7 @@ const { ticket } = useTicketInformation()
       :group-id="groupId"
       :can-use-draft="canUseDraft"
       :shared-draft-id="sharedDraftId"
+      :close-blocked="closeBlocked"
       @submit="$emit('submit', $event)"
       @execute-macro="$emit('execute-macro', $event)"
     />

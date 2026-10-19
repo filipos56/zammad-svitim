@@ -25,6 +25,8 @@ interface Props {
   disabled: boolean
   canUseDraft?: boolean
   sharedDraftId?: string | null
+  // Svitim pro tebe (fork): zlute tlacitko = „Uzavřít ticket“, nejde dokud chybi stitky.
+  closeBlocked?: boolean
 }
 
 const props = defineProps<Props>()
@@ -109,21 +111,23 @@ const actionItems = computed(() => {
     size="large"
     variant="submit"
     type="button"
-    :disabled="disabled"
+    v-tooltip="closeBlocked ? $t('Fill in the ticket labels first') : undefined"
+    :disabled="disabled || closeBlocked"
     :items="actionItems"
     :addon-label="__('Drafts & macros')"
     @click="$emit('submit', $event)"
   >
-    {{ $t('Update') }}
+    {{ $t('Close ticket') }}
   </SplitButton>
   <CommonButton
     v-else
+    v-tooltip="closeBlocked ? $t('Fill in the ticket labels first') : undefined"
     size="large"
     variant="submit"
     type="button"
-    :disabled="disabled"
+    :disabled="disabled || closeBlocked"
     @click="$emit('submit', $event)"
   >
-    {{ $t('Update') }}
+    {{ $t('Close ticket') }}
   </CommonButton>
 </template>

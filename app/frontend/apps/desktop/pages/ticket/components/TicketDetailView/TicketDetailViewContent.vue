@@ -1,7 +1,7 @@
 <!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { onKeyStroke, useLocalStorage, useScroll, whenever } from '@vueuse/core'
+import { onKeyStroke, useDebounceFn, useLocalStorage, useScroll, whenever } from '@vueuse/core'
 import { cloneDeep } from 'lodash-es'
 import {
   computed,
@@ -134,6 +134,7 @@ const {
   formGroupReset,
   formSubmit,
   triggerFormUpdater,
+  updateFieldValues,
 } = useForm()
 
 const tabContext = useTaskbarTabContext(
@@ -716,6 +717,81 @@ const keepChatReplyOpen = () => {
   )
 }
 
+// --- Svitim pro tebe (fork, Filip 19. 10. 2026) -------------------------------------------
+// Zlute tlacitko dole = jen „Uzavřít ticket“ a jde stisknout, az kdyz jsou vyplnene stitky
+// (stejna pole jako Core Workflow „Brána štítků při zavírání ticketu“ ve skupine Podpora).
+// Odpoved se odesila tlacitkem „Odeslat“ v poli odpovedi (nebo Enterem u chatu).
+// Zmeny v pravem panelu (vlastnik, priorita, stitky…) se ukladaji samy hned po zmene.
+const SVITIM_SKUPINA_PODPORA = 2
+const SVITIM_STAV_UZAVRENO = 4
+const SVITIM_STITKY = [
+  'stav_zakaznika',
+  'tema',
+  'dotaz_pred_nakupem',
+  'typ_produktu',
+  'zna_pojem',
+  'typ_chytreho_osvetleni',
+]
+
+const svitimStitkyVyplnene = computed(() => {
+  const v = values.value as Record<string, unknown>
+  if (Number(v.group_id) !== SVITIM_SKUPINA_PODPORA) return true
+  return SVITIM_STITKY.every((pole) => {
+    const hodnota = v[pole]
+    return Array.isArray(hodnota) ? hodnota.length > 0 : hodnota !== undefined && hodnota !== null && hodnota !== ''
+  })
+})
+
+const svitimUzavritTicket = async () => {
+  updateFieldValues({ state_id: SVITIM_STAV_UZAVRENO })
+  await nextTick()
+  checkSubmitEditTicket()
+}
+
+let svitimUkladam = false
+const svitimUlozPanel = useDebounceFn(async () => {
+  const node = form.value?.formNode
+  if (!node || !ticket.value || isDisabled.value || svitimUkladam) return
+
+  // Ulozit jen kdyz se zmenilo neco mimo odpoved (skupina „article“ se ukada odeslanim).
+  const zmenenoMimoOdpoved = node.children.some(
+    (child) => child.name !== 'article' && !!child.context?.state.dirty,
+  )
+  if (!zmenenoMimoOdpoved) return
+
+  const data = cloneDeep(values.value) as FormSubmitData<TicketUpdateFormData>
+  const rozepsanaOdpoved = (data as Record<string, unknown>).article
+  delete (data as Record<string, unknown>).article
+  // Sdileny navrh (AI) se pri ulozeni panelu nesmi „spotrebovat“.
+  delete (data as Record<string, unknown>).shared_draft_id
+
+  svitimUkladam = true
+  try {
+    const result = await editTicket(data, { skipValidators: [] })
+    if (result?.ticketUpdate?.ticket) {
+      notify({ id: 'svitim-autosave', type: NotificationTypes.Success, message: __('Saved.') })
+      await nextTick()
+      formReset(
+        {
+          object: ticket.value,
+          values: {
+            ...buildTicketResetValues(ticket.value),
+            ...(rozepsanaOdpoved ? { article: rozepsanaOdpoved as FormValues } : {}),
+          },
+        },
+        { resetFlags: false },
+      )
+    }
+  } catch (error) {
+    if (error instanceof UserError && form.value?.formNode) setErrors(form.value.formNode, error)
+  } finally {
+    svitimUkladam = false
+  }
+}, 900)
+
+watch(values, () => svitimUlozPanel(), { deep: true })
+// ------------------------------------------------------------------------------------------
+
 const handleShowArticleForm = (
   articleType: string,
   performReply: AppSpecificTicketArticleType['performReply'],
@@ -773,6 +849,7 @@ const handleShowArticleForm = (
         :parent-reached-bottom-scroll="isReachingBottom"
         @show-article-form="handleShowArticleForm"
         @discard-form="discardReplyForm"
+        @submit-reply="checkSubmitEditTicket"
       >
         <template #leading>
           <FloatingToolbar
@@ -858,7 +935,8 @@ const handleShowArticleForm = (
         :live-user-list="liveUserList"
         :shared-draft-id="ticket?.sharedDraftZoomId"
         :ticket-id="ticketId"
-        @submit="checkSubmitEditTicket"
+        :close-blocked="!svitimStitkyVyplnene"
+        @submit="svitimUzavritTicket"
         @discard="discardChanges"
         @execute-macro="executeMacro"
       />
