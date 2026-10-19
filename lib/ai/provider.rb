@@ -75,6 +75,13 @@ class AI::Provider
       options[:embedding_input_limit] = @config[:embedding_input_limit]
     end
 
+    # Svitim pro tebe (fork): max_tokens z nastaveni pripojeni (config["max_tokens"]).
+    # Vychozich 1024 (Anthropic) u delsiho ticketu odpoved usekne nebo vrati prazdnou
+    # (overeno 26. 9. 2026) -- souhrn ticketu a textove nastroje to samy obejit neumi.
+    if @config[:max_tokens].to_i.positive? && !options[:max_tokens]
+      options[:max_tokens] = @config[:max_tokens].to_i
+    end
+
     @options = self.class::DEFAULT_OPTIONS.merge(options.compact)
 
     @response_metadata = {}
