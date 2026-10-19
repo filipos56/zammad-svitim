@@ -275,8 +275,25 @@ class HtmlSanitizer
         string.match?(%r{(javascript|livescript|vbscript|data):}i)
       end
 
+      # Svitim pro tebe (fork): obrazky z nasich vlastnich webu (bannery, ikony a logo
+      # v mailech z formularu oranzovka.cz / svitimprotebe.cz) se neblokuji -- nas web nas
+      # nesleduje. Cizi vzdalene obrazky se blokuji dal (sledovaci pixely). Filip 19. 10. 2026.
+      SVITIM_TRUSTED_IMAGE_HOSTS = %w[oranzovka.cz svitimprotebe.cz].freeze
+
       def remote_url?(string)
+        return false if svitim_trusted_image?(string)
+
         string.downcase.start_with?('http:', 'https:', 'ftp:', '//')
+      end
+
+      def svitim_trusted_image?(string)
+        uri = URI.parse(string.strip)
+        return false if uri.scheme != 'https' || uri.host.blank?
+
+        host = uri.host.downcase
+        SVITIM_TRUSTED_IMAGE_HOSTS.any? { |trusted| host == trusted || host.end_with?(".#{trusted}") }
+      rescue URI::Error
+        false
       end
 
       def unsafe_api_path?(string)
