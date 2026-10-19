@@ -27,7 +27,9 @@ const {
 const items = computed(() => [
   {
     label: 'Tickets',
-    to: { name: 'ticket-list' },
+    // Svitim pro tebe (fork): drobeckova navigace -- „Tikety“ vede na prehledy. Upstream tu
+    // ma `to`, ktere CommonBreadcrumb nezna (cte `route`), takze odkaz nefungoval.
+    route: '/tickets/view',
   },
   {
     label: ticketNumberWithTicketHook.value || '',
