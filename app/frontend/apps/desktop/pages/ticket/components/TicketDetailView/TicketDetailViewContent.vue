@@ -137,9 +137,27 @@ const {
   updateFieldValues,
 } = useForm()
 
+// Svitim pro tebe (fork): prazdna, samo otevrena odpoved do chatu neni „neulozena zmena“.
+// Pocita se jen, kdyz operator neco napsal / prilozil nebo zmenil pole ticketu. Spolehlivejsi
+// nez resetovat formular (Zammad pole po otevreni a po odeslani znovu „usini“; testy 19. 10.).
+const svitimDirty = computed(() => {
+  if (!isDirty.value) return false
+  if (ticket.value?.createArticleType?.name !== 'chat') return true
+  const v = (values.value || {}) as Record<string, unknown>
+  const clanek = (v.article || {}) as { articleType?: string; body?: string; attachments?: unknown[] }
+  const odpovedPrazdna =
+    (!clanek.articleType || clanek.articleType === 'chat') &&
+    String(clanek.body || '').replace(/<[^>]*>/g, '').trim() === '' &&
+    !(clanek.attachments?.length)
+  if (!odpovedPrazdna) return true
+  const node = form.value?.formNode
+  if (!node) return true
+  return node.children.some((child) => child.name !== 'article' && !!child.context?.state.dirty)
+})
+
 const tabContext = useTaskbarTabContext(
   () => ({
-    formIsDirty: isDirty.value,
+    formIsDirty: svitimDirty.value,
   }),
   isInitialSettled,
 )
@@ -810,23 +828,7 @@ const svitimUlozPanel = useDebounceFn(async () => {
   }
 }, 900)
 
-// U chatoveho ticketu muze Zammad pole odpovedi po otevreni znovu „usinit“ (form updater
-// po prvnim nacteni ticketu doplni hodnoty). Proto se prazdne pole hlida prubezne, ne jen
-// jednou po otevreni (test 19. 10. 2026: pri cerstvem otevreni ticketu svitilo
-// „Zrušit neuložené změny“). Reset probehne jen u prazdne odpovedi typu chat.
-const svitimChatPristineDebounced = useDebounceFn(() => {
-  if (ticket.value?.createArticleType?.name !== 'chat') return
-  chatReplyPristineIfEmpty()
-}, 400)
-
-watch(
-  values,
-  () => {
-    svitimUlozPanel()
-    svitimChatPristineDebounced()
-  },
-  { deep: true },
-)
+watch(values, () => svitimUlozPanel(), { deep: true })
 // ------------------------------------------------------------------------------------------
 
 const handleShowArticleForm = (
@@ -962,7 +964,7 @@ const handleShowArticleForm = (
     <template #bottomBar>
       <TicketDetailBottomBar
         :can-use-draft="canUseDraft"
-        :dirty="isDirty"
+        :dirty="svitimDirty"
         :disabled="isDisabled"
         :form="form"
         :group-id="groupId"
