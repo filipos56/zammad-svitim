@@ -5,6 +5,7 @@ import AddMenu from '#desktop/components/layout/LayoutSidebar/LeftSidebar/MenuCo
 import AdminMenu from '#desktop/components/layout/LayoutSidebar/LeftSidebar/MenuContainer/AdminMenu/AdminMenu.vue'
 import { SidebarName } from '#desktop/components/layout/types.ts'
 import { useSidebarDisplay } from '#desktop/components/layout/useSidebarDisplay.ts'
+import SvitimMenu from '#desktop/components/svitim/SvitimMenu.vue'
 
 const { isSidebarCollapsed } = useSidebarDisplay(SidebarName.Primary)
 </script>
@@ -15,6 +16,8 @@ const { isSidebarCollapsed } = useSidebarDisplay(SidebarName.Primary)
     class="flex items-center gap-1.5 rounded-xl bg-gray-700 p-2 empty:hidden"
     :class="{ 'flex-col bg-transparent': isSidebarCollapsed }"
   >
+    <!-- Svitim pro tebe (fork): Kalendář + upozornění na chat -->
+    <SvitimMenu />
     <AdminMenu role="listitem" />
     <AddMenu role="listitem" />
   </div>
