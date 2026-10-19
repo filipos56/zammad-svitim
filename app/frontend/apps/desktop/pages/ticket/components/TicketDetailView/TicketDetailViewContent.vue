@@ -810,7 +810,23 @@ const svitimUlozPanel = useDebounceFn(async () => {
   }
 }, 900)
 
-watch(values, () => svitimUlozPanel(), { deep: true })
+// U chatoveho ticketu muze Zammad pole odpovedi po otevreni znovu „usinit“ (form updater
+// po prvnim nacteni ticketu doplni hodnoty). Proto se prazdne pole hlida prubezne, ne jen
+// jednou po otevreni (test 19. 10. 2026: pri cerstvem otevreni ticketu svitilo
+// „Zrušit neuložené změny“). Reset probehne jen u prazdne odpovedi typu chat.
+const svitimChatPristineDebounced = useDebounceFn(() => {
+  if (ticket.value?.createArticleType?.name !== 'chat') return
+  chatReplyPristineIfEmpty()
+}, 400)
+
+watch(
+  values,
+  () => {
+    svitimUlozPanel()
+    svitimChatPristineDebounced()
+  },
+  { deep: true },
+)
 // ------------------------------------------------------------------------------------------
 
 const handleShowArticleForm = (
