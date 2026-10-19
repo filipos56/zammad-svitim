@@ -104,6 +104,7 @@ musí doplnit do DB (`Translation#update!(target:)` — **nikdy `Translation.res
 | `Turn on chat notifications` | Zapnout upozornění na chat |
 | `Chat notifications are on (click to turn off)` | Upozornění na chat jsou zapnutá (kliknutím vypnete) |
 | `Chat notifications are blocked in the browser settings` | Upozornění na chat jsou v prohlížeči zablokovaná |
+| `Orders (Pohoda)` | Objednávky (Pohoda) |
 
 Vše najednou nasadí `~/zammad-skripty/po-nasazeni-forku.rb` (spouští se po každém nasazení).
 
