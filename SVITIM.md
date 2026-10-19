@@ -98,6 +98,14 @@ musí doplnit do DB (`Translation#update!(target:)` — **nikdy `Translation.res
 | `Discard draft` | Zahodit návrh |
 | `Send to chat` | Odeslat do chatu |
 | `or use the reply actions on articles.` | nebo použijte Odpověď u konkrétní zprávy. |
+| `AI reply` | Odpověď od AI |
+| `Calendar` | Kalendář |
+| `Chat notifications` | Upozornění na chat |
+| `Turn on chat notifications` | Zapnout upozornění na chat |
+| `Chat notifications are on (click to turn off)` | Upozornění na chat jsou zapnutá (kliknutím vypnete) |
+| `Chat notifications are blocked in the browser settings` | Upozornění na chat jsou v prohlížeči zablokovaná |
+
+Vše najednou nasadí `~/zammad-skripty/po-nasazeni-forku.rb` (spouští se po každém nasazení).
 
 ## Automatický test v prohlížeči
 
