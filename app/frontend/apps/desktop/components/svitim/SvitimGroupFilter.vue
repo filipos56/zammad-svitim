@@ -4,13 +4,7 @@
 <script setup lang="ts">
 import { useSvitimGroupFilter } from '#desktop/entities/ticket/svitim/groups.ts'
 
-const { groups, showFilter, isVisible, toggle } = useSvitimGroupFilter()
-
-const onChange = (event: Event, id: number) => {
-  toggle(id)
-  // Posledni skupinu vypnout nejde -- vratit zaskrtnuti i v prohlizeci.
-  ;(event.target as HTMLInputElement).checked = isVisible(id)
-}
+const { groups, showFilter, isVisible, isLastVisible, toggle } = useSvitimGroupFilter()
 </script>
 
 <template>
@@ -22,9 +16,10 @@ const onChange = (event: Event, id: number) => {
     >
       <input
         type="checkbox"
-        class="h-4 w-4 cursor-pointer accent-blue-800"
+        class="h-4 w-4 cursor-pointer accent-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
         :checked="isVisible(group.id)"
-        @change="onChange($event, group.id)"
+        :disabled="isLastVisible(group.id)"
+        @change="toggle(group.id)"
       />
       <span
         class="inline-block h-3 w-[3px] rounded-sm"

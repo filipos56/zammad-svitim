@@ -58,12 +58,14 @@ export const useSvitimGroupFilter = () => {
 
   const isVisible = (id: number) => !hiddenGroupIds.value.includes(id)
 
-  const toggle = (id: number) => {
-    if (isVisible(id)) {
-      // Posledni zaskrtnutou skupinu vypnout nejde, prehled by byl prazdny.
-      const visibleCount = groups.value.filter((group) => isVisible(group.id)).length
-      if (visibleCount <= 1) return
+  // Posledni zaskrtnutou skupinu vypnout nejde, prehled by byl prazdny.
+  const isLastVisible = (id: number) =>
+    isVisible(id) && groups.value.filter((group) => isVisible(group.id)).length <= 1
 
+  const toggle = (id: number) => {
+    if (isLastVisible(id)) return
+
+    if (isVisible(id)) {
       hiddenGroupIds.value = [...hiddenGroupIds.value, id]
       return
     }
@@ -71,5 +73,5 @@ export const useSvitimGroupFilter = () => {
     hiddenGroupIds.value = hiddenGroupIds.value.filter((hiddenId) => hiddenId !== id)
   }
 
-  return { groups, showFilter, groupIds, isVisible, toggle }
+  return { groups, showFilter, groupIds, isVisible, isLastVisible, toggle }
 }
