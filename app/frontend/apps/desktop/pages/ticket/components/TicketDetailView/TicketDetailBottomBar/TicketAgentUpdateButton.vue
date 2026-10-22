@@ -1,23 +1,13 @@
 <!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
-import { NotificationTypes } from '#shared/components/CommonNotifications/types.ts'
-import { useNotifications } from '#shared/components/CommonNotifications/useNotifications.ts'
 import type { FormRef } from '#shared/components/Form/types.ts'
-import { useMacros } from '#shared/entities/macro/composables/useMacros.ts'
 import type { MacroById } from '#shared/entities/macro/types.ts'
-import { useTicketSharedDraftZoomCreateMutation } from '#shared/entities/ticket-shared-draft-zoom/graphql/mutations/ticketSharedDraftZoomCreate.api.ts'
-import { MutationHandler } from '#shared/server/apollo/handler/index.ts'
 
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
-import { useDialog } from '#desktop/components/CommonDialog/useDialog.ts'
-import type { MenuItem } from '#desktop/components/CommonPopoverMenu/types.ts'
-import SplitButton from '#desktop/components/SplitButton/SplitButton.vue'
 
-import { useTicketSharedDraft } from '../../../composables/useTicketSharedDraft.ts'
-
+// Svitim pro tebe (fork): koncepty a makra z rozbalovaci sipky jsme nepouzivali
+// (ukazovala jen „No items available“), proto tu zustava jen samotne tlacitko.
 interface Props {
   ticketId: string
   form?: FormRef
@@ -29,101 +19,21 @@ interface Props {
   closeBlocked?: boolean
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
-const emit = defineEmits<{
+defineEmits<{
   submit: [MouseEvent]
   'execute-macro': [MacroById]
 }>()
-
-const macrosSelector = computed(() => (props.groupId ? { entityIds: [props.groupId] } : {}))
-
-const { macrosLoaded, macros } = useMacros(macrosSelector)
-
-const { notify } = useNotifications()
-
-const groupLabels = {
-  drafts: __('Drafts'),
-  macros: __('Macros'),
-}
-
-const { mapSharedDraftParams } = useTicketSharedDraft()
-
-const sharedDraftConflictDialog = useDialog({
-  name: 'shared-draft-conflict',
-  component: () => import('../TicketSharedDraftConflictDialog.vue'),
-})
-
-const articleReplyIsPresent = computed(() => !!props.form?.flags.newArticlePresent)
-
-const actionItems = computed(() => {
-  const saveAsDraftAction: MenuItem = {
-    label: __('Save as draft'),
-    groupLabel: groupLabels.drafts,
-    icon: 'floppy',
-    key: 'save-draft',
-    show: () => props.canUseDraft && articleReplyIsPresent.value,
-    onClick: () => {
-      if (props.sharedDraftId) {
-        sharedDraftConflictDialog.open({
-          sharedDraftId: props.sharedDraftId,
-          sharedDraftParams: mapSharedDraftParams(props.ticketId, props.form),
-          form: props.form,
-        })
-
-        return
-      }
-
-      const draftCreateMutation = new MutationHandler(useTicketSharedDraftZoomCreateMutation(), {
-        errorNotificationMessage: __('Draft could not be saved.'),
-      })
-
-      draftCreateMutation
-        .send({ input: mapSharedDraftParams(props.ticketId, props.form) })
-        .then(() => {
-          notify({
-            id: 'shared-draft-detail-view-created',
-            type: NotificationTypes.Success,
-            message: __('Shared draft has been created successfully.'),
-          })
-        })
-    },
-  }
-
-  if (!macros.value) return [saveAsDraftAction]
-
-  const macroMenu: MenuItem[] = macros.value.map((macro) => ({
-    key: macro.id,
-    label: macro.name,
-    groupLabel: groupLabels.macros,
-    icon: 'play-circle',
-    iconClass: 'text-yellow-300',
-    onClick: () => emit('execute-macro', macro),
-  }))
-
-  return [saveAsDraftAction, ...(props.groupId ? macroMenu : [])]
-})
 </script>
 
 <template>
-  <SplitButton
-    v-if="!macrosLoaded || canUseDraft || macros?.length"
-    size="large"
-    variant="submit"
-    type="button"
-    v-tooltip="closeBlocked ? $t('Fill in the ticket labels first') : undefined"
-    :disabled="disabled || closeBlocked"
-    :items="actionItems"
-    :addon-label="__('Drafts & macros')"
-    @click="$emit('submit', $event)"
-  >
-    {{ $t('Close ticket') }}
-  </SplitButton>
+  <!-- Svitim pro tebe (fork): jen „Uzavřít ticket“, bez šipky s koncepty a makry, světle zelené. -->
   <CommonButton
-    v-else
     v-tooltip="closeBlocked ? $t('Fill in the ticket labels first') : undefined"
     size="large"
-    variant="submit"
+    variant="none"
+    class="bg-[#86efac]! text-black! hover:bg-[#4ade80]!"
     type="button"
     :disabled="disabled || closeBlocked"
     @click="$emit('submit', $event)"

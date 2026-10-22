@@ -531,6 +531,7 @@ export type TicketsCachedByOverviewQueryVariables = Exact<{
   cacheTtl: number;
   renewCache?: boolean | null | undefined;
   knownCollectionSignature?: string | null | undefined;
+  svitimGroupIds?: Array<number> | number | null | undefined;
 }>;
 
 

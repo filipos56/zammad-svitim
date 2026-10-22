@@ -37,6 +37,7 @@ import { useTicketBulkEdit } from '#desktop/components/Ticket/TicketBulkEditFlyo
 import TicketListTable from '#desktop/components/Ticket/TicketListTable.vue'
 import { useElementScroll } from '#desktop/composables/useElementScroll.ts'
 import { useScrollPosition } from '#desktop/composables/useScrollPosition.ts'
+import { useSvitimGroupFilter } from '#desktop/entities/ticket/svitim/groups.ts'
 import { useTicketsCachedByOverviewCache } from '#desktop/entities/ticket/composables/useTicketsCachedByOverviewCache.ts'
 import { useTicketsCachedByOverviewQuery } from '#desktop/entities/ticket/graphql/queries/ticketsCachedByOverview.api.ts'
 import { useTicketOverviewsStore } from '#desktop/entities/ticket/stores/ticketOverviews.ts'
@@ -77,6 +78,9 @@ const cacheTtl = computed(() =>
     : queryPollingConfig.value.background.cache_ttl_sec,
 )
 
+// Svitim pro tebe (fork): zaskrtavatka skupin nad prehledem (Podpora / osobni).
+const { groupIds: svitimGroupIds } = useSvitimGroupFilter()
+
 const ticketsQueryVariables = computed<TicketsCachedByOverviewQueryVariables>(
   (currentVariables) => {
     const newVariables: TicketsCachedByOverviewQueryVariables = {
@@ -87,6 +91,8 @@ const ticketsQueryVariables = computed<TicketsCachedByOverviewQueryVariables>(
       cacheTtl: queryPollingConfig.value.foreground.cache_ttl_sec,
       renewCache: currentVariables?.overviewId !== props.overviewId,
     }
+
+    if (svitimGroupIds.value) newVariables.svitimGroupIds = svitimGroupIds.value
 
     const cachedTickets = readTicketsByOverviewCache(newVariables)
 

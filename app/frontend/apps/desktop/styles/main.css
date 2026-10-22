@@ -10,6 +10,13 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] * ));
 
 @layer base {
+  /* Svitim pro tebe (fork): prichozi maily i editor odpovedi vzdy Arialem,
+     vlastni pismo odesilatele (inline font-family) prebijeme. */
+  .inner-article-body *:not(code, pre, kbd, samp),
+  .ProseMirror *:not(code, pre, kbd, samp) {
+    font-family: Arial, Helvetica, sans-serif !important;
+  }
+
   :root {
     /* LIMITED support -> opt-in modern browsers @see https://developer.mozilla.org/en-US/docs/Web/CSS/interpolate-size */
 

@@ -335,10 +335,10 @@ const schemaData = reactive({
           :form="formNodeId"
           :addon-label="__('Macros')"
         >
-          {{ $t('Apply') }}
+          {{ $t('Save changes') }}
         </SplitButton>
         <CommonButton v-else type="submit" size="large" variant="submit" :form="formNodeId">
-          {{ $t('Apply') }}
+          {{ $t('Save changes') }}
         </CommonButton>
       </div>
     </template>

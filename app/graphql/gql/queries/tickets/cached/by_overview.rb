@@ -10,6 +10,8 @@ module Gql::Queries
     argument :overview_id, GraphQL::Types::ID, loads: Gql::Types::OverviewType, description: 'Overview ID'
     argument :order_by, String, required: false, description: 'Set a custom order by'
     argument :order_direction, Gql::Types::Enum::OrderDirectionType, required: false, description: 'Set a custom order direction'
+    # Svitim pro tebe (fork, 22. 10. 2026): zaskrtavatka skupin nad prehledem (Podpora / osobni).
+    argument :svitim_group_ids, [Integer], required: false, description: 'Show only tickets of these groups (fork)'
     argument :cache_ttl, Integer do
       description 'How long to cache the overview data, in seconds. This will be part of the cache key so that different durations get different caches.'
     end
@@ -33,17 +35,18 @@ module Gql::Queries
 
     end
 
-    def resolve(cache_ttl:, overview:, renew_cache: false, order_by: nil, order_direction: nil, known_collection_signature: nil)
+    def resolve(cache_ttl:, overview:, renew_cache: false, order_by: nil, order_direction: nil, known_collection_signature: nil, svitim_group_ids: nil)
       if renew_cache
         context.scoped_set!(:renew_cache, true)
       end
-      maybe_cached_value(cache_ttl:, overview:, order_by:, order_direction:)
+      maybe_cached_value(cache_ttl:, overview:, order_by:, order_direction:, svitim_group_ids:)
     end
 
-    def maybe_cached_value(cache_ttl:, overview:, order_by:, order_direction:)
+    def maybe_cached_value(cache_ttl:, overview:, order_by:, order_direction:, svitim_group_ids: nil)
       cache_fragment(cache_key: { exclude_arguments: [:renew_cache] }, object_cache_key: object_cache_key(overview), expires_in: cache_ttl) do
         # This will fetch tickets with 'overview' permissions, which logically include 'read' permissions.
-        ::Ticket::Overviews.tickets_for_overview(overview, context.current_user, order_by: order_by, order_direction: order_direction)
+        tickets = ::Ticket::Overviews.tickets_for_overview(overview, context.current_user, order_by: order_by, order_direction: order_direction)
+        svitim_group_ids.nil? ? tickets : tickets&.where(group_id: svitim_group_ids)
       end
     end
   end

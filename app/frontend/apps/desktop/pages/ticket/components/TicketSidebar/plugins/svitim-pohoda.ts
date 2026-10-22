@@ -1,7 +1,10 @@
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 // Svitim pro tebe (fork): panel „Pohoda“ — objednavky zakaznika z ucetnictvi (Filip 19. 10. 2026).
-import { TicketSidebarScreenType } from '#desktop/pages/ticket/types/sidebar.ts'
+import {
+  TicketSidebarScreenType,
+  type TicketSidebarContext,
+} from '#desktop/pages/ticket/types/sidebar.ts'
 
 import SvitimPohoda from '../SvitimPohoda/SvitimPohoda.vue'
 
@@ -15,4 +18,6 @@ export default <TicketSidebarPlugin>{
   views: ['agent'],
   icon: 'card-list',
   order: 1100,
+  // Jen v Podpore -- v osobni skupine (Filip – osobní, 22. 10. 2026) data z Pohody nechceme.
+  available: (context: TicketSidebarContext) => context.ticket?.value?.group?.name === 'Podpora',
 }

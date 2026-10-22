@@ -6,6 +6,7 @@ import { computed } from 'vue'
 
 import CommonEmptyMessage from '#desktop/components/CommonEmptyMessage/CommonEmptyMessage.vue'
 import type { NavigationTab } from '#desktop/components/CommonTabs/types.ts'
+import SvitimGroupFilter from '#desktop/components/svitim/SvitimGroupFilter.vue'
 import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
 import LayoutSidebar from '#desktop/components/layout/LayoutSidebar.vue'
 import { SidebarName } from '#desktop/components/layout/types.ts'
@@ -134,6 +135,7 @@ const {
       content-padding
     >
       <template #headerRight>
+        <SvitimGroupFilter />
         <TicketBulkEditButton
           :checked-ticket-ids="checkedTicketIds"
           :total-count="currentOverviewCount"

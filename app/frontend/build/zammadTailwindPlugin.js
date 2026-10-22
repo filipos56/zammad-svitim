@@ -61,7 +61,8 @@ module.exports = plugin(
     theme: {
       extend: {
         fontFamily: {
-          sans: ['"Fira Sans"', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+          // Svitim pro tebe (fork): Arial vsude, stejne pismo jako v odchozich mailech.
+          sans: ['Arial', 'Helvetica', 'sans-serif'],
           mono: ['"Fira Mono"', ...defaultTheme.fontFamily.mono],
         },
         colors: {

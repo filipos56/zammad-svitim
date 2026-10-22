@@ -461,6 +461,11 @@ const channelRowClasses: Record<string, string> = {
 const getChannelRowClasses = (item: TableAdvancedItem) => {
   if (props.object !== EnumObjectManagerObjects.Ticket) return ''
 
+  // Osobni skupiny (Filip – osobní, pozdeji Tomova; 22. 10. 2026) fialovy pruh -- jsou to
+  // maily, takze se nepotkaji s pruhem chatu / telefonu.
+  const skupina = (item as TicketById).group?.name
+  if (skupina && skupina !== 'Podpora') return 'shadow-[inset_3px_0_0_#a855f7]'
+
   const kanal = (item as TicketById).objectAttributeValues?.find(
     (value) => value.attribute?.name === 'kanal',
   )?.value
